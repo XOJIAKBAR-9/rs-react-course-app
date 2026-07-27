@@ -11,8 +11,8 @@ interface State {
   error: string | null;
 }
 
-class Main extends Component<{}, State> {
-  constructor(props: {}) {
+class Main extends Component<Record<string, never>, State> {
+  constructor(props: Record<string, never>) {
     super(props);
     this.state = {
       items: [],

@@ -1,3 +1,4 @@
 # class-components
 
 A React application built utilizing Class Components, TypeScript, and Vite. Developed as part of the RS School training program.
+Week1 of React
