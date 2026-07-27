@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 import Main from './Main';
 import * as api from '../services/api';
 
@@ -32,14 +33,18 @@ describe('Main Component', () => {
     ]
   };
 
+  const renderWithRouter = (ui: React.ReactElement) => {
+    return render(<MemoryRouter>{ui}</MemoryRouter>);
+  };
+
   it('makes initial API call on component mount and handles success', async () => {
     vi.mocked(api.fetchCharacters).mockResolvedValueOnce(mockData);
     
-    render(<Main />);
+    renderWithRouter(<Main />);
     
     expect(screen.getByText('Loading data... ⏳')).toBeInTheDocument();
     
-    expect(api.fetchCharacters).toHaveBeenCalledWith('');
+    expect(api.fetchCharacters).toHaveBeenCalledWith('', 1);
     
     await waitFor(() => {
       expect(screen.getByText('Luke Skywalker', { exact: false })).toBeInTheDocument();
@@ -50,12 +55,12 @@ describe('Main Component', () => {
   });
 
   it('handles search term from localStorage on initial load', async () => {
-    localStorage.setItem('searchTerm', 'Vader');
+    localStorage.setItem('searchTerm', JSON.stringify('Vader'));
     vi.mocked(api.fetchCharacters).mockResolvedValueOnce(mockData);
     
-    render(<Main />);
+    renderWithRouter(<Main />);
     
-    expect(api.fetchCharacters).toHaveBeenCalledWith('Vader');
+    expect(api.fetchCharacters).toHaveBeenCalledWith('Vader', 1);
     await waitFor(() => {
       expect(screen.getByText('Darth Vader', { exact: false })).toBeInTheDocument();
     });
@@ -64,7 +69,7 @@ describe('Main Component', () => {
   it('handles API error responses correctly', async () => {
     vi.mocked(api.fetchCharacters).mockRejectedValueOnce(new Error('Server error: 500'));
     
-    render(<Main />);
+    renderWithRouter(<Main />);
     
     await waitFor(() => {
       expect(screen.getByText('Error: Server error: 500')).toBeInTheDocument();
@@ -78,7 +83,7 @@ describe('Main Component', () => {
       .mockResolvedValueOnce({ count: 0, next: null, previous: null, results: [] }) // initial load
       .mockResolvedValueOnce(mockData); // search load
       
-    render(<Main />);
+    renderWithRouter(<Main />);
     
     await waitFor(() => {
       expect(screen.queryByText('Loading data... ⏳')).not.toBeInTheDocument();
@@ -90,7 +95,7 @@ describe('Main Component', () => {
     await userEvent.type(input, 'Luke');
     await userEvent.click(button);
     
-    expect(api.fetchCharacters).toHaveBeenCalledWith('Luke');
+    expect(api.fetchCharacters).toHaveBeenCalledWith('Luke', 1);
     
     await waitFor(() => {
       expect(screen.getByText('Luke Skywalker', { exact: false })).toBeInTheDocument();
@@ -98,9 +103,10 @@ describe('Main Component', () => {
   });
 
   it('handles application crash when test button is clicked', () => {
-    render(<Main />);
+    renderWithRouter(<Main />);
     const crashButton = screen.getByText('Test Application Crash');
     
     expect(crashButton).toBeInTheDocument();
   });
 });
+

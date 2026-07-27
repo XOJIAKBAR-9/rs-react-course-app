@@ -1,15 +1,22 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 import Header from './Header';
 
 describe('Header Component', () => {
   it('renders the header with correct title', () => {
-    render(<Header />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Star Wars Explorer');
+    render(<MemoryRouter><Header /></MemoryRouter>);
+    const titleElement = screen.getByText('Star Wars Explorer');
+    expect(titleElement).toBeInTheDocument();
+    
+    // Links should be present
+    expect(screen.getByRole('link', { name: /home/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /about/i })).toBeInTheDocument();
   });
 
   it('renders the description', () => {
-    render(<Header />);
-    expect(screen.getByText('A strictly class-based React application.')).toBeInTheDocument();
+    render(<MemoryRouter><Header /></MemoryRouter>);
+    const descElement = screen.getByText(/A React hooks application/i);
+    expect(descElement).toBeInTheDocument();
   });
 });
