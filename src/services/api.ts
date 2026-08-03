@@ -9,7 +9,7 @@ export const fetchCharacters = async (searchTerm: string = '', page: number = 1)
     queryParams.append('page', page.toString());
   }
   const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
-  const response = await fetch(`https://swapi.dev/api/people/${query}`);
+  const response = await fetch(`https://swapi.py4e.com/api/people/${query}`);
   
   if (!response.ok) {
     throw new Error(`Server error: ${response.status}`);
@@ -19,7 +19,7 @@ export const fetchCharacters = async (searchTerm: string = '', page: number = 1)
 };
 
 export const fetchCharacter = async (id: string): Promise<Character> => {
-  const response = await fetch(`https://swapi.dev/api/people/${id}/`);
+  const response = await fetch(`https://swapi.py4e.com/api/people/${id}/`);
   
   if (!response.ok) {
     throw new Error(`Server error: ${response.status}`);

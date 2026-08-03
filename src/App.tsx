@@ -5,6 +5,7 @@ import DetailView from './components/DetailView';
 import About from './pages/About';
 import NotFound from './pages/NotFound';
 import ErrorBoundary from './components/ErrorBoundary';
+import Flyout from './components/Flyout';
 
 const router = createBrowserRouter([
   {
@@ -30,7 +31,12 @@ const router = createBrowserRouter([
 const App: React.FC = () => {
   return (
     <ErrorBoundary>
-      <RouterProvider router={router} />
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <div style={{ flex: '1' }}>
+          <RouterProvider router={router} />
+        </div>
+        <Flyout />
+      </div>
     </ErrorBoundary>
   );
 };
