@@ -8,7 +8,7 @@ interface Props {
 
 const Search: React.FC<Props> = ({ onSearch, initialSearchTerm }) => {
   const [inputValue, setInputValue] = useState(initialSearchTerm);
-  const [storedTerm, setStoredTerm] = useLocalStorage<string>('searchTerm', '');
+  const [, setStoredTerm] = useLocalStorage<string>('searchTerm', '');
 
   useEffect(() => {
     setInputValue(initialSearchTerm);

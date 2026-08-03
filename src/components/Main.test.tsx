@@ -2,6 +2,10 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
+import selectionReducer from '../store/selectionSlice';
+import { ThemeProvider } from './ThemeProvider';
 import Main from './Main';
 import * as api from '../services/api';
 
@@ -34,7 +38,18 @@ describe('Main Component', () => {
   };
 
   const renderWithRouter = (ui: React.ReactElement) => {
-    return render(<MemoryRouter>{ui}</MemoryRouter>);
+    const store = configureStore({
+      reducer: {
+        selection: selectionReducer,
+      },
+    });
+    return render(
+      <Provider store={store}>
+        <ThemeProvider>
+          <MemoryRouter>{ui}</MemoryRouter>
+        </ThemeProvider>
+      </Provider>
+    );
   };
 
   it('makes initial API call on component mount and handles success', async () => {

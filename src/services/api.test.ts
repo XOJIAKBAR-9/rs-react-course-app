@@ -19,7 +19,7 @@ describe('API Services', () => {
       });
 
       const data = await fetchCharacters();
-      expect(globalThis.fetch).toHaveBeenCalledWith('https://swapi.dev/api/people/');
+      expect(globalThis.fetch).toHaveBeenCalledWith('https://swapi.py4e.com/api/people/');
       expect(data).toEqual(mockResponse);
     });
 
@@ -31,7 +31,7 @@ describe('API Services', () => {
       });
 
       const data = await fetchCharacters('Luke Skywalker');
-      expect(globalThis.fetch).toHaveBeenCalledWith('https://swapi.dev/api/people/?search=Luke+Skywalker');
+      expect(globalThis.fetch).toHaveBeenCalledWith('https://swapi.py4e.com/api/people/?search=Luke+Skywalker');
       expect(data).toEqual(mockResponse);
     });
 
@@ -43,7 +43,7 @@ describe('API Services', () => {
       });
 
       await fetchCharacters('', 2);
-      expect(globalThis.fetch).toHaveBeenCalledWith('https://swapi.dev/api/people/?page=2');
+      expect(globalThis.fetch).toHaveBeenCalledWith('https://swapi.py4e.com/api/people/?page=2');
     });
 
     it('throws an error if the response is not ok', async () => {
@@ -65,7 +65,7 @@ describe('API Services', () => {
       });
 
       const data = await fetchCharacter('1');
-      expect(globalThis.fetch).toHaveBeenCalledWith('https://swapi.dev/api/people/1/');
+      expect(globalThis.fetch).toHaveBeenCalledWith('https://swapi.py4e.com/api/people/1/');
       expect(data).toEqual(mockResponse);
     });
   });

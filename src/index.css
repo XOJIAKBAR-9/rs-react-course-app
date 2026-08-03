@@ -1,0 +1,29 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Light Theme Variables */
+:root, .light {
+  --bg-color: #ffffff;
+  --text-color: #000000;
+  --border-color: #333333;
+  --card-bg-hover: #f9f9f9;
+  --header-bg: #f0f0f0;
+}
+
+/* Dark Theme Variables */
+.dark {
+  --bg-color: #121212;
+  --text-color: #e0e0e0;
+  --border-color: #777777;
+  --card-bg-hover: #222222;
+  --header-bg: #1f1f1f;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
