@@ -1,46 +1,41 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import { Outlet, useNavigate, useSearchParams } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import Search from './Search';
 import CardList from './CardList';
 import Pagination from './Pagination';
 import Header from './Header';
-import { fetchCharacters } from '../services/api';
-import { type Character } from '../types';
+import { useGetCharactersQuery, starWarsApi } from '../services/api';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 const Main: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [storedTerm] = useLocalStorage<string>('searchTerm', '');
-  
-  const [items, setItems] = useState<Character[]>([]);
-  const [totalItems, setTotalItems] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const initialSearch = searchParams.get('search') ?? storedTerm;
   const currentPage = parseInt(searchParams.get('page') || '1', 10);
-  
-  const loadData = useCallback(async (searchTerm: string, page: number) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await fetchCharacters(searchTerm, page);
-      setItems(data.results);
-      setTotalItems(data.count);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
 
-  useEffect(() => {
-    loadData(initialSearch, currentPage);
-  }, [initialSearch, currentPage, loadData]);
+  const { data, error: apiError, isFetching: isLoading } = useGetCharactersQuery({
+    searchTerm: initialSearch,
+    page: currentPage,
+  });
+
+  const items = data?.results || [];
+  const totalItems = data?.count || 0;
+  
+  // Format the error message
+  let error: string | null = null;
+  if (apiError) {
+    if ('status' in apiError) {
+      error = `Server error: ${apiError.status}`;
+    } else {
+      error = apiError.message || 'Unknown error';
+    }
+  }
 
   const handleSearch = (searchTerm: string) => {
-    // Reset to page 1 on new search
     setSearchParams({ search: searchTerm, page: '1' });
   };
 
@@ -55,6 +50,10 @@ const Main: React.FC = () => {
     });
   };
 
+  const handleRefresh = () => {
+    dispatch(starWarsApi.util.invalidateTags(['Character']));
+  };
+
   const handleThrowError = () => {
     throw new Error('Simulated application crash!');
   };
@@ -63,7 +62,17 @@ const Main: React.FC = () => {
     <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '20px', fontFamily: 'sans-serif' }}>
       <Header /> 
       
-      <Search onSearch={handleSearch} initialSearchTerm={initialSearch} />
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '20px' }}>
+        <div style={{ flex: 1 }}>
+          <Search onSearch={handleSearch} initialSearchTerm={initialSearch} />
+        </div>
+        <button 
+          onClick={handleRefresh} 
+          style={{ padding: '10px 15px', cursor: 'pointer', height: 'fit-content' }}
+        >
+          Refresh Data
+        </button>
+      </div>
       
       <div style={{ display: 'flex', gap: '20px', minHeight: '500px' }}>
         {/* Left Side: Results List */}

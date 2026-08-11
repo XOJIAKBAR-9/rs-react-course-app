@@ -1,43 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { fetchCharacter } from '../services/api';
-import { type Character } from '../types';
+import { useGetCharacterQuery } from '../services/api';
 
 const DetailView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [character, setCharacter] = useState<Character | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  
+  const { data: character, error: apiError, isFetching: isLoading } = useGetCharacterQuery(id as string, {
+    skip: !id,
+  });
 
-  useEffect(() => {
-    if (!id) return;
-    
-    let isMounted = true;
-    const loadCharacter = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const data = await fetchCharacter(id);
-        if (isMounted) {
-          setCharacter(data);
-          setIsLoading(false);
-        }
-      } catch (err) {
-        if (isMounted) {
-          setError(err instanceof Error ? err.message : 'Unknown error');
-          setIsLoading(false);
-        }
-      }
-    };
-    
-    loadCharacter();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [id]);
+  let error: string | null = null;
+  if (apiError) {
+    if ('status' in apiError) {
+      error = `Server error: ${apiError.status}`;
+    } else {
+      error = apiError.message || 'Unknown error';
+    }
+  }
 
   const handleClose = () => {
     // Navigate back to the home page but preserve search params
