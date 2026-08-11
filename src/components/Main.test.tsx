@@ -5,19 +5,29 @@ import { MemoryRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import selectionReducer from '../store/selectionSlice';
+import { starWarsApi } from '../services/api';
 import { ThemeProvider } from './ThemeProvider';
 import Main from './Main';
-import * as api from '../services/api';
-
-vi.mock('../services/api', () => ({
-  fetchCharacters: vi.fn(),
-}));
 
 describe('Main Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    globalThis.fetch = vi.fn();
+    // Reset RTK Query cache between tests
+    starWarsApi.util.resetApiState();
   });
+
+  const mockFetchResponse = (ok: boolean, data: any, status = 200) => {
+    (globalThis.fetch as any).mockResolvedValueOnce({
+      ok,
+      status,
+      headers: { get: () => 'application/json' },
+      clone: function() { return this; },
+      json: () => Promise.resolve(data),
+      text: () => Promise.resolve(JSON.stringify(data)),
+    });
+  };
 
   const mockData = {
     count: 2,
@@ -41,25 +51,31 @@ describe('Main Component', () => {
     const store = configureStore({
       reducer: {
         selection: selectionReducer,
+        [starWarsApi.reducerPath]: starWarsApi.reducer,
       },
+      middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware().concat(starWarsApi.middleware),
     });
-    return render(
+    return { store, ...render(
       <Provider store={store}>
         <ThemeProvider>
           <MemoryRouter>{ui}</MemoryRouter>
         </ThemeProvider>
       </Provider>
-    );
+    )};
   };
 
   it('makes initial API call on component mount and handles success', async () => {
-    vi.mocked(api.fetchCharacters).mockResolvedValueOnce(mockData);
+    mockFetchResponse(true, mockData);
     
     renderWithRouter(<Main />);
     
     expect(screen.getByText('Loading data... ⏳')).toBeInTheDocument();
     
-    expect(api.fetchCharacters).toHaveBeenCalledWith('', 1);
+    await waitFor(() => {
+      const requestArg = (globalThis.fetch as any).mock.calls[0][0];
+      expect(requestArg.url || requestArg).toContain('https://swapi.py4e.com/api/people/');
+    });
     
     await waitFor(() => {
       expect(screen.getByText('Luke Skywalker', { exact: false })).toBeInTheDocument();
@@ -71,18 +87,21 @@ describe('Main Component', () => {
 
   it('handles search term from localStorage on initial load', async () => {
     localStorage.setItem('searchTerm', JSON.stringify('Vader'));
-    vi.mocked(api.fetchCharacters).mockResolvedValueOnce(mockData);
+    mockFetchResponse(true, mockData);
     
     renderWithRouter(<Main />);
     
-    expect(api.fetchCharacters).toHaveBeenCalledWith('Vader', 1);
+    await waitFor(() => {
+      const requestArg = (globalThis.fetch as any).mock.calls[0][0];
+      expect(requestArg.url || requestArg).toContain('https://swapi.py4e.com/api/people/?search=Vader');
+    });
     await waitFor(() => {
       expect(screen.getByText('Darth Vader', { exact: false })).toBeInTheDocument();
     });
   });
 
   it('handles API error responses correctly', async () => {
-    vi.mocked(api.fetchCharacters).mockRejectedValueOnce(new Error('Server error: 500'));
+    mockFetchResponse(false, null, 500);
     
     renderWithRouter(<Main />);
     
@@ -94,9 +113,22 @@ describe('Main Component', () => {
   });
 
   it('updates state and makes API call when search is triggered', async () => {
-    vi.mocked(api.fetchCharacters)
-      .mockResolvedValueOnce({ count: 0, next: null, previous: null, results: [] }) // initial load
-      .mockResolvedValueOnce(mockData); // search load
+    // We need to mock it twice, first for the initial load, second for the search.
+    (globalThis.fetch as any).mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: { get: () => 'application/json' },
+      clone: function() { return this; },
+      json: () => Promise.resolve({ count: 0, next: null, previous: null, results: [] }),
+      text: () => Promise.resolve(JSON.stringify({ count: 0, next: null, previous: null, results: [] })),
+    }).mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: { get: () => 'application/json' },
+      clone: function() { return this; },
+      json: () => Promise.resolve(mockData),
+      text: () => Promise.resolve(JSON.stringify(mockData)),
+    });
       
     renderWithRouter(<Main />);
     
@@ -110,7 +142,10 @@ describe('Main Component', () => {
     await userEvent.type(input, 'Luke');
     await userEvent.click(button);
     
-    expect(api.fetchCharacters).toHaveBeenCalledWith('Luke', 1);
+    await waitFor(() => {
+      const requestArg = (globalThis.fetch as any).mock.calls[1][0];
+      expect(requestArg.url || requestArg).toContain('https://swapi.py4e.com/api/people/?search=Luke');
+    });
     
     await waitFor(() => {
       expect(screen.getByText('Luke Skywalker', { exact: false })).toBeInTheDocument();
@@ -118,6 +153,7 @@ describe('Main Component', () => {
   });
 
   it('handles application crash when test button is clicked', () => {
+    mockFetchResponse(true, mockData); // initial load to avoid unhandled rejection
     renderWithRouter(<Main />);
     const crashButton = screen.getByText('Test Application Crash');
     

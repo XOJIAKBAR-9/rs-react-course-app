@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import selectionReducer from '../store/selectionSlice';
-import type { RootState } from '../store';
+import { starWarsApi } from '../services/api';
 import Flyout from './Flyout';
 import * as csv from '../utils/csv';
 
@@ -17,11 +17,14 @@ const mockItems = [
   { id: '2', name: 'Vader', birth_year: '41BBY', url: 'http://swapi.dev/api/people/4/' },
 ];
 
-const renderWithProvider = (preloadedState?: RootState) => {
+const renderWithProvider = (preloadedState?: any) => {
   const store = configureStore({
     reducer: {
       selection: selectionReducer,
+      [starWarsApi.reducerPath]: starWarsApi.reducer,
     },
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware().concat(starWarsApi.middleware),
     preloadedState,
   });
   return { store, ...render(<Provider store={store}><Flyout /></Provider>) };

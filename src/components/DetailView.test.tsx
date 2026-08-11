@@ -2,26 +2,47 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
+import { starWarsApi } from '../services/api';
 import DetailView from './DetailView';
-import * as api from '../services/api';
-
-vi.mock('../services/api', () => ({
-  fetchCharacter: vi.fn(),
-}));
 
 describe('DetailView Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    globalThis.fetch = vi.fn();
+    starWarsApi.util.resetApiState();
   });
 
+  const mockFetchResponse = (ok: boolean, data: any, status = 200) => {
+    (globalThis.fetch as any).mockResolvedValueOnce({
+      ok,
+      status,
+      headers: { get: () => 'application/json' },
+      clone: function() { return this; },
+      json: () => Promise.resolve(data),
+      text: () => Promise.resolve(JSON.stringify(data)),
+    });
+  };
+
   const renderWithRouter = (ui: React.ReactElement, initialEntry = '/details/1') => {
+    const store = configureStore({
+      reducer: {
+        [starWarsApi.reducerPath]: starWarsApi.reducer,
+      },
+      middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware().concat(starWarsApi.middleware),
+    });
+
     return render(
-      <MemoryRouter initialEntries={[initialEntry]}>
-        <Routes>
-          <Route path="/details/:id" element={ui} />
-          <Route path="/" element={<div>Home Page</div>} />
-        </Routes>
-      </MemoryRouter>
+      <Provider store={store}>
+        <MemoryRouter initialEntries={[initialEntry]}>
+          <Routes>
+            <Route path="/details/:id" element={ui} />
+            <Route path="/" element={<div>Home Page</div>} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
     );
   };
 
@@ -37,7 +58,7 @@ describe('DetailView Component', () => {
       url: 'https://swapi.dev/api/people/1/'
     };
     
-    vi.mocked(api.fetchCharacter).mockResolvedValueOnce(mockCharacter);
+    mockFetchResponse(true, mockCharacter);
     
     renderWithRouter(<DetailView />);
     
@@ -52,17 +73,17 @@ describe('DetailView Component', () => {
   });
 
   it('handles API errors', async () => {
-    vi.mocked(api.fetchCharacter).mockRejectedValueOnce(new Error('Failed to fetch'));
+    mockFetchResponse(false, null, 500);
     
     renderWithRouter(<DetailView />);
     
     await waitFor(() => {
-      expect(screen.getByText('Error: Failed to fetch')).toBeInTheDocument();
+      expect(screen.getByText('Error: Server error: 500')).toBeInTheDocument();
     });
   });
 
   it('navigates to home when close button is clicked', async () => {
-    vi.mocked(api.fetchCharacter).mockResolvedValueOnce({ name: 'Luke', birth_year: '19BBY', url: '' } as import('../types').Character);
+    mockFetchResponse(true, { name: 'Luke', birth_year: '19BBY', url: '' });
     
     renderWithRouter(<DetailView />);
     
@@ -72,3 +93,4 @@ describe('DetailView Component', () => {
     expect(screen.getByText('Home Page')).toBeInTheDocument();
   });
 });
+

@@ -1,72 +1,84 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { fetchCharacters, fetchCharacter } from './api';
+import { configureStore } from '@reduxjs/toolkit';
+import { starWarsApi } from './api';
 
 describe('API Services', () => {
+  let store: any;
+
   beforeEach(() => {
     globalThis.fetch = vi.fn();
+    store = configureStore({
+      reducer: {
+        [starWarsApi.reducerPath]: starWarsApi.reducer,
+      },
+      middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware().concat(starWarsApi.middleware),
+    });
   });
 
   afterEach(() => {
     vi.resetAllMocks();
   });
 
-  describe('fetchCharacters', () => {
+  const mockFetchResponse = (ok: boolean, data: any, status = 200) => {
+    (globalThis.fetch as any).mockResolvedValue({
+      ok,
+      status,
+      headers: { get: () => 'application/json' },
+      clone: function() { return this; },
+      json: () => Promise.resolve(data),
+      text: () => Promise.resolve(JSON.stringify(data)),
+    });
+  };
+
+  describe('getCharacters endpoint', () => {
     it('calls the correct URL when no search term is provided', async () => {
       const mockResponse = { results: [] };
-      (globalThis.fetch as any).mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-      });
+      mockFetchResponse(true, mockResponse);
 
-      const data = await fetchCharacters();
-      expect(globalThis.fetch).toHaveBeenCalledWith('https://swapi.py4e.com/api/people/');
-      expect(data).toEqual(mockResponse);
+      const action = await store.dispatch(starWarsApi.endpoints.getCharacters.initiate({}));
+      const requestArg = (globalThis.fetch as any).mock.calls[0][0];
+      expect(requestArg.url || requestArg).toContain('https://swapi.py4e.com/api/people/');
+      expect(action.data).toEqual(mockResponse);
     });
 
     it('calls the correct URL with a search term', async () => {
       const mockResponse = { results: [{ name: 'Luke Skywalker' }] };
-      (globalThis.fetch as any).mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-      });
+      mockFetchResponse(true, mockResponse);
 
-      const data = await fetchCharacters('Luke Skywalker');
-      expect(globalThis.fetch).toHaveBeenCalledWith('https://swapi.py4e.com/api/people/?search=Luke+Skywalker');
-      expect(data).toEqual(mockResponse);
+      const action = await store.dispatch(starWarsApi.endpoints.getCharacters.initiate({ searchTerm: 'Luke Skywalker' }));
+      const requestArg = (globalThis.fetch as any).mock.calls[0][0];
+      expect(requestArg.url || requestArg).toContain('https://swapi.py4e.com/api/people/?search=Luke+Skywalker');
+      expect(action.data).toEqual(mockResponse);
     });
 
     it('calls the correct URL with pagination', async () => {
       const mockResponse = { results: [] };
-      (globalThis.fetch as any).mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-      });
+      mockFetchResponse(true, mockResponse);
 
-      await fetchCharacters('', 2);
-      expect(globalThis.fetch).toHaveBeenCalledWith('https://swapi.py4e.com/api/people/?page=2');
+      await store.dispatch(starWarsApi.endpoints.getCharacters.initiate({ page: 2 }));
+      const requestArg = (globalThis.fetch as any).mock.calls[0][0];
+      expect(requestArg.url || requestArg).toContain('https://swapi.py4e.com/api/people/?page=2');
     });
 
-    it('throws an error if the response is not ok', async () => {
-      (globalThis.fetch as any).mockResolvedValue({
-        ok: false,
-        status: 404,
-      });
+    it('handles errors correctly', async () => {
+      mockFetchResponse(false, null, 404);
 
-      await expect(fetchCharacters()).rejects.toThrow('Server error: 404');
+      const action = await store.dispatch(starWarsApi.endpoints.getCharacters.initiate({}));
+      expect(action.error).toBeDefined();
     });
   });
 
-  describe('fetchCharacter', () => {
+  describe('getCharacter endpoint', () => {
     it('calls the correct URL to fetch a single character', async () => {
       const mockResponse = { name: 'Luke Skywalker' };
-      (globalThis.fetch as any).mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-      });
+      mockFetchResponse(true, mockResponse);
 
-      const data = await fetchCharacter('1');
-      expect(globalThis.fetch).toHaveBeenCalledWith('https://swapi.py4e.com/api/people/1/');
-      expect(data).toEqual(mockResponse);
+      const action = await store.dispatch(starWarsApi.endpoints.getCharacter.initiate('1'));
+      const requestArg = (globalThis.fetch as any).mock.calls[0][0];
+      expect(requestArg.url || requestArg).toContain('https://swapi.py4e.com/api/people/1/');
+      expect(action.data).toEqual(mockResponse);
     });
   });
 });
+
