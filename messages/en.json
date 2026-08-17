@@ -1,0 +1,50 @@
+{
+  "Navigation": {
+    "home": "Home",
+    "about": "About"
+  },
+  "Search": {
+    "placeholder": "Search characters...",
+    "button": "Search"
+  },
+  "List": {
+    "results": "Results",
+    "loading": "Loading data... ⏳",
+    "error": "Error: {error}"
+  },
+  "Details": {
+    "title": "Details",
+    "close": "Close",
+    "birthYear": "Birth Year",
+    "gender": "Gender",
+    "height": "Height",
+    "mass": "Mass",
+    "hairColor": "Hair Color",
+    "eyeColor": "Eye Color",
+    "loading": "Loading details... ⏳",
+    "error": "Error: {error}"
+  },
+  "Card": {
+    "name": "Name",
+    "birthYear": "Birth Year"
+  },
+  "Flyout": {
+    "title": "Selected Items",
+    "unselectAll": "Unselect All",
+    "noItems": "No items selected.",
+    "downloadCSV": "Download CSV"
+  },
+  "Error": {
+    "title": "Something went wrong",
+    "tryAgain": "Try again"
+  },
+  "NotFound": {
+    "title": "404 - Page Not Found",
+    "description": "The page you are looking for does not exist.",
+    "backHome": "Go back home"
+  },
+  "About": {
+    "title": "About Us",
+    "content": "This is a statically generated server component page showing how to use Next.js App Router."
+  }
+}

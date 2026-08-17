@@ -1,0 +1,10 @@
+<svg width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="300" height="300" fill="#000000" />
+  <circle cx="150" cy="150" r="100" fill="none" stroke="#ffee00" stroke-width="5" />
+  <text x="150" y="140" fill="#ffee00" font-family="sans-serif" font-size="40" font-weight="bold" text-anchor="middle">STAR</text>
+  <text x="150" y="185" fill="#ffee00" font-family="sans-serif" font-size="40" font-weight="bold" text-anchor="middle">WARS</text>
+  <circle cx="50" cy="50" r="2" fill="#ffffff" />
+  <circle cx="250" cy="80" r="3" fill="#ffffff" />
+  <circle cx="200" cy="250" r="2" fill="#ffffff" />
+  <circle cx="80" cy="220" r="1.5" fill="#ffffff" />
+</svg>
