@@ -1,38 +1,49 @@
+'use client';
 import React from 'react';
+import { Link } from '../i18n/routing';
+import { useSearchParams } from 'next/navigation';
 
-interface PaginationProps {
+interface Props {
   currentPage: number;
   totalItems: number;
   itemsPerPage: number;
-  onPageChange: (page: number) => void;
 }
 
-const Pagination: React.FC<PaginationProps> = ({ currentPage, totalItems, itemsPerPage, onPageChange }) => {
+const Pagination: React.FC<Props> = ({ currentPage, totalItems, itemsPerPage }) => {
   const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const searchParams = useSearchParams();
 
-  if (totalPages <= 1) {
-    return null;
-  }
+  if (totalPages <= 1) return null;
+
+  const createPageUrl = (page: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', page.toString());
+    return `?${params.toString()}`;
+  };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '20px', gap: '10px' }}>
-      <button 
-        onClick={() => onPageChange(currentPage - 1)} 
-        disabled={currentPage === 1}
-        style={{ padding: '5px 10px' }}
-      >
-        Previous
-      </button>
+    <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', gap: '10px' }}>
+      {currentPage > 1 && (
+        <Link 
+          href={createPageUrl(currentPage - 1)}
+          style={{ padding: '8px 12px', border: '1px solid var(--border-color, #ccc)', borderRadius: '4px', textDecoration: 'none', color: 'inherit' }}
+        >
+          Previous
+        </Link>
+      )}
       
-      <span>Page {currentPage} of {totalPages}</span>
+      <span style={{ padding: '8px 12px' }}>
+        Page {currentPage} of {totalPages}
+      </span>
       
-      <button 
-        onClick={() => onPageChange(currentPage + 1)} 
-        disabled={currentPage === totalPages}
-        style={{ padding: '5px 10px' }}
-      >
-        Next
-      </button>
+      {currentPage < totalPages && (
+        <Link 
+          href={createPageUrl(currentPage + 1)}
+          style={{ padding: '8px 12px', border: '1px solid var(--border-color, #ccc)', borderRadius: '4px', textDecoration: 'none', color: 'inherit' }}
+        >
+          Next
+        </Link>
+      )}
     </div>
   );
 };

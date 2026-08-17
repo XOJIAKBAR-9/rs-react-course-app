@@ -1,30 +1,23 @@
+'use client';
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { unselectAll } from '../store/selectionSlice';
-import { generateCSV } from '../utils/csv';
 
 const Flyout: React.FC = () => {
   const selectedItems = useAppSelector(state => state.selection.items);
   const dispatch = useAppDispatch();
+  const t = useTranslations('Flyout');
 
   if (selectedItems.length === 0) {
     return null;
   }
 
-  const handleDownload = () => {
-    // Format data for CSV
-    const csvData = selectedItems.map(item => ({
-      ID: item.id,
-      Name: item.name,
-      'Birth Year': item.birth_year,
-      'Details URL': item.url
-    }));
-    generateCSV(csvData, `${selectedItems.length}_items.csv`);
-  };
-
   const handleUnselectAll = () => {
     dispatch(unselectAll());
   };
+
+  const ids = selectedItems.map(item => item.id).join(',');
 
   return (
     <div style={{
@@ -42,21 +35,24 @@ const Flyout: React.FC = () => {
       boxShadow: '0 -2px 10px rgba(0,0,0,0.1)'
     }}>
       <div style={{ fontWeight: 'bold' }}>
-        {selectedItems.length} item{selectedItems.length > 1 ? 's' : ''} selected
+        {t('title')}: {selectedItems.length}
       </div>
-      <div>
+      <div style={{ display: 'flex', gap: '10px' }}>
         <button 
           onClick={handleUnselectAll}
-          style={{ marginRight: '10px', padding: '5px 10px', cursor: 'pointer', borderRadius: '4px', border: '1px solid var(--border-color, #ccc)', background: 'transparent', color: 'var(--text-color, #000)' }}
+          style={{ padding: '5px 10px', cursor: 'pointer', borderRadius: '4px', border: '1px solid var(--border-color, #ccc)', background: 'transparent', color: 'var(--text-color, #000)' }}
         >
-          Unselect all
+          {t('unselectAll')}
         </button>
-        <button 
-          onClick={handleDownload}
-          style={{ padding: '5px 10px', cursor: 'pointer', borderRadius: '4px', border: 'none', background: '#007bff', color: 'white', fontWeight: 'bold' }}
-        >
-          Download
-        </button>
+        <form action="/api/csv" method="POST">
+          <input type="hidden" name="ids" value={ids} />
+          <button 
+            type="submit"
+            style={{ padding: '5px 10px', cursor: 'pointer', borderRadius: '4px', border: 'none', background: '#007bff', color: 'white', fontWeight: 'bold' }}
+          >
+            {t('downloadCSV')}
+          </button>
+        </form>
       </div>
     </div>
   );

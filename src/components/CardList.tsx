@@ -1,19 +1,19 @@
+'use client';
 import React from 'react';
 import Card from './Card';
 import { type Character } from '../types';
 
 interface Props {
   items: Character[];
-  onItemClick: (id: string) => void;
 }
 
-const CardList: React.FC<Props> = ({ items, onItemClick }) => {
+const CardList: React.FC<Props> = ({ items }) => {
   if (items.length === 0) return <p>No results found.</p>;
 
   return (
     <div>
       {items.map((item) => (
-        <Card key={item.url} character={item} onClick={onItemClick} />
+        <Card key={item.url} character={item} />
       ))}
     </div>
   );
