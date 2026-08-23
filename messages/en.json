@@ -46,5 +46,16 @@
   "About": {
     "title": "About Us",
     "content": "This is a statically generated server component page showing how to use Next.js App Router."
+  },
+  "AI": {
+    "explainButton": "Explain this item with AI",
+    "pending": "Generating explanation... ⏳",
+    "notice": "This content is AI-generated and may be inaccurate.",
+    "retry": "Retry",
+    "regenerate": "Regenerate",
+    "errorMissingKey": "Missing AI configuration. Please provide an API key.",
+    "errorQuota": "AI quota exceeded. Please try again later.",
+    "errorBlocked": "Response blocked due to safety concerns.",
+    "errorGeneric": "Failed to generate explanation. Please try again."
   }
 }
